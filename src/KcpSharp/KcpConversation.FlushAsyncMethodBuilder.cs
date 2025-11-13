@@ -144,7 +144,7 @@ namespace KcpSharp
             }
 
 
-            private static StateMachineBox CreateWeaklyTypedStateMachineBox()
+            private static StateMachineBox<IAsyncStateMachine> CreateWeaklyTypedStateMachineBox()
             {
                 return new StateMachineBox<IAsyncStateMachine>(null);
             }

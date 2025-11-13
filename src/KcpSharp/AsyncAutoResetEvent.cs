@@ -6,7 +6,7 @@ using System.Threading.Tasks.Sources;
 
 namespace KcpSharp
 {
-    internal class AsyncAutoResetEvent<T> : IValueTaskSource<T>
+    internal sealed class AsyncAutoResetEvent<T> : IValueTaskSource<T>
     {
         private ManualResetValueTaskSourceCore<T> _rvtsc;
         private SpinLock _lock;

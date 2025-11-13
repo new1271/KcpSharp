@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 namespace KcpSharp.NetstandardShim
 {
-    internal class LinkedList<T>
+    internal sealed class LinkedList<T>
     {
         // This LinkedList is a doubly-Linked circular list.
         internal LinkedListNode<T>? head;

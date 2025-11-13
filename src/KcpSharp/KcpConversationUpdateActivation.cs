@@ -187,7 +187,7 @@ namespace KcpSharp
             _waitList.Dispose();
         }
 
-        class WaitList : IValueTaskSource, IKcpConversationUpdateNotificationSource, IDisposable
+        private sealed class WaitList : IValueTaskSource, IKcpConversationUpdateNotificationSource, IDisposable
         {
             private readonly KcpConversationUpdateActivation _parent;
             private LinkedList<WaitItem>? _list;

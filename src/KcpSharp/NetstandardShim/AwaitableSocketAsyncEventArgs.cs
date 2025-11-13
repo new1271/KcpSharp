@@ -7,7 +7,7 @@ using System.Threading.Tasks.Sources;
 
 namespace KcpSharp
 {
-    internal class AwaitableSocketAsyncEventArgs : SocketAsyncEventArgs, IValueTaskSource
+    internal sealed class AwaitableSocketAsyncEventArgs : SocketAsyncEventArgs, IValueTaskSource
     {
         private ManualResetValueTaskSourceCore<bool> _mrvtsc = new ManualResetValueTaskSourceCore<bool> { RunContinuationsAsynchronously = true };
 
