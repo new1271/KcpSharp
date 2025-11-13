@@ -171,7 +171,7 @@ namespace KcpSharp
             _rmt_wnd = options is null || options.RemoteReceiveWindow <= 0 ? KcpConversationOptions.RemoteReceiveWindowDefaultValue : (uint)options.RemoteReceiveWindow;
             _rcv_nxt = 0;
 
-            _interval = options is null || options.UpdateInterval < 10 ? KcpConversationOptions.UpdateIntervalDefaultValue : (uint)options.UpdateInterval;
+            _interval = options is null || options.UpdateInterval <= 0 ? KcpConversationOptions.UpdateIntervalDefaultValue : (uint)options.UpdateInterval;
 
             _fastresend = options is null ? 0 : options.FastResend;
             _fastlimit = 5;
