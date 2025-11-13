@@ -99,7 +99,7 @@ namespace KcpSharp
         /// <param name="transport">The underlying transport.</param>
         /// <param name="options">The options of the <see cref="KcpConversation"/>.</param>
         public KcpConversation(IKcpTransport transport, KcpConversationOptions? options)
-            : this(transport, null, options)
+            : this(transport, null, options ?? default)
         { }
 
         /// <summary>
@@ -109,20 +109,16 @@ namespace KcpSharp
         /// <param name="conversationId">The conversation ID.</param>
         /// <param name="options">The options of the <see cref="KcpConversation"/>.</param>
         public KcpConversation(IKcpTransport transport, int conversationId, KcpConversationOptions? options)
-            : this(transport, (uint)conversationId, options)
+            : this(transport, (uint)conversationId, options ?? default)
         { }
 
-        private KcpConversation(IKcpTransport transport, uint? conversationId, KcpConversationOptions? options)
+        private KcpConversation(IKcpTransport transport, uint? conversationId, KcpConversationOptions options)
         {
-            _bufferPool = options?.BufferPool ?? DefaultArrayPoolBufferAllocator.Default;
+            _bufferPool = options.BufferPool ?? DefaultArrayPoolBufferAllocator.Default;
             _transport = transport;
             _id = conversationId;
 
-            if (options is null)
-            {
-                _mtu = KcpConversationOptions.MtuDefaultValue;
-            }
-            else if (options.Mtu < 50)
+            if (options.Mtu < 50)
             {
                 throw new ArgumentException("MTU must be at least 50.", nameof(options));
             }
@@ -131,31 +127,27 @@ namespace KcpSharp
                 _mtu = options.Mtu;
             }
 
-            _preBufferSize = options?.PreBufferSize ?? 0;
-            _postBufferSize = options?.PostBufferSize ?? 0;
+            _preBufferSize = options.PreBufferSize;
+            _postBufferSize = options.PostBufferSize;
             if (_preBufferSize < 0)
-            {
                 throw new ArgumentException("PreBufferSize must be a non-negative integer.", nameof(options));
-            }
+
             if (_postBufferSize < 0)
-            {
                 throw new ArgumentException("PostBufferSize must be a non-negative integer.", nameof(options));
-            }
+
             if ((uint)(_preBufferSize + _postBufferSize) >= (uint)(_mtu - 20))
-            {
                 throw new ArgumentException("The sum of PreBufferSize and PostBufferSize is too large. There is not enough space in the packet for the KCP header.", nameof(options));
-            }
+
             if (conversationId.HasValue && (uint)(_preBufferSize + _postBufferSize) >= (uint)(_mtu - 24))
-            {
                 throw new ArgumentException("The sum of PreBufferSize and PostBufferSize is too large. There is not enough space in the packet for the KCP header.", nameof(options));
-            }
+
 
             _mss = conversationId.HasValue ? _mtu - 24 : _mtu - 20;
             _mss = _mss - _preBufferSize - _postBufferSize;
 
             _ssthresh = 2;
 
-            _nodelay = options is not null && options.NoDelay;
+            _nodelay = options.NoDelay;
             if (_nodelay)
             {
                 _rx_minrto = 30;
@@ -166,22 +158,24 @@ namespace KcpSharp
                 _rx_minrto = 100;
             }
 
-            _snd_wnd = options is null || options.SendWindow <= 0 ? KcpConversationOptions.SendWindowDefaultValue : (uint)options.SendWindow;
-            _rcv_wnd = options is null || options.ReceiveWindow <= 0 ? KcpConversationOptions.ReceiveWindowDefaultValue : (uint)options.ReceiveWindow;
-            _rmt_wnd = options is null || options.RemoteReceiveWindow <= 0 ? KcpConversationOptions.RemoteReceiveWindowDefaultValue : (uint)options.RemoteReceiveWindow;
+            _snd_wnd = options.SendWindow <= 0 ? KcpConversationOptions.SendWindowDefaultValue : (uint)options.SendWindow;
+            _rcv_wnd = options.ReceiveWindow <= 0 ? KcpConversationOptions.ReceiveWindowDefaultValue : (uint)options.ReceiveWindow;
+            _rmt_wnd = options.RemoteReceiveWindow <= 0 ? KcpConversationOptions.RemoteReceiveWindowDefaultValue : (uint)options.RemoteReceiveWindow;
             _rcv_nxt = 0;
 
-            _interval = options is null || options.UpdateInterval <= 0 ? KcpConversationOptions.UpdateIntervalDefaultValue : (uint)options.UpdateInterval;
+            _interval = options.UpdateInterval <= 0 ? KcpConversationOptions.UpdateIntervalDefaultValue : (uint)options.UpdateInterval;
 
-            _fastresend = options is null ? 0 : options.FastResend;
+            _fastresend = options.FastResend;
             _fastlimit = 5;
-            _nocwnd = options is not null && options.DisableCongestionControl;
-            _stream = options is not null && options.StreamMode;
+            _nocwnd = options.DisableCongestionControl;
+            _stream = options.StreamMode;
 
             _updateActivation = new KcpConversationUpdateActivation((int)_interval);
             _queueItemCache = new KcpSendReceiveQueueItemCache();
-            _sendQueue = new KcpSendQueue(_bufferPool, _updateActivation, _stream, options is null || options.SendQueueSize <= 0 ? KcpConversationOptions.SendQueueSizeDefaultValue : options.SendQueueSize, _mss, _queueItemCache);
-            _receiveQueue = new KcpReceiveQueue(_stream, options is null || options.ReceiveQueueSize <= 0 ? KcpConversationOptions.ReceiveQueueSizeDefaultValue : options.ReceiveQueueSize, _queueItemCache);
+            _sendQueue = new KcpSendQueue(_bufferPool, _updateActivation, _stream,
+                options.SendQueueSize <= 0 ? KcpConversationOptions.SendQueueSizeDefaultValue : options.SendQueueSize, _mss, _queueItemCache);
+            _receiveQueue = new KcpReceiveQueue(_stream,
+                options.ReceiveQueueSize <= 0 ? KcpConversationOptions.ReceiveQueueSizeDefaultValue : options.ReceiveQueueSize, _queueItemCache);
             _ackList = new KcpAcknowledgeList(_sendQueue, (int)_snd_wnd);
 
             _updateLoopCts = new CancellationTokenSource();
@@ -190,19 +184,20 @@ namespace KcpSharp
 
             _lastSendTick = _ts_flush;
             _lastReceiveTick = _ts_flush;
-            KcpKeepAliveOptions? keepAliveOptions = options?.KeepAliveOptions;
-            if (keepAliveOptions is not null)
+            KcpKeepAliveOptions? keepAliveOptionsOptional = options.KeepAliveOptions;
+            if (keepAliveOptionsOptional is not null)
             {
+                KcpKeepAliveOptions keepAliveOptions = keepAliveOptionsOptional.Value;
                 _keepAliveEnabled = true;
-                _keepAliveInterval = (uint)keepAliveOptions.SendInterval;
-                _keepAliveGracePeriod = (uint)keepAliveOptions.GracePeriod;
+                _keepAliveInterval = keepAliveOptions.SendInterval;
+                _keepAliveGracePeriod = keepAliveOptions.GracePeriod;
             }
 
-            _receiveWindowNotificationOptions = options?.ReceiveWindowNotificationOptions;
+            _receiveWindowNotificationOptions = options.ReceiveWindowNotificationOptions;
             if (_receiveWindowNotificationOptions is not null)
             {
                 _ts_rcv_notify_wait = 0;
-                _ts_rcv_notify = _ts_flush + (uint)_receiveWindowNotificationOptions.InitialInterval;
+                _ts_rcv_notify = _ts_flush + (uint)_receiveWindowNotificationOptions.Value.InitialInterval;
             }
 
             RunUpdateOnActivation();
@@ -632,8 +627,8 @@ namespace KcpSharp
                 return true;
             }
 
-            KcpReceiveWindowNotificationOptions? options = _receiveWindowNotificationOptions;
-            if (options is null)
+            KcpReceiveWindowNotificationOptions? optionsOptional = _receiveWindowNotificationOptions;
+            if (optionsOptional is null)
             {
                 return false;
             }
@@ -643,8 +638,9 @@ namespace KcpSharp
                 return false;
             }
 
-            uint inital = (uint)options.InitialInterval;
-            uint maximum = (uint)options.MaximumInterval;
+            KcpReceiveWindowNotificationOptions options = optionsOptional.Value;
+            uint inital = options.InitialInterval;
+            uint maximum = options.MaximumInterval;
             if (_ts_rcv_notify_wait < inital)
             {
                 _ts_rcv_notify_wait = inital;
@@ -922,12 +918,13 @@ namespace KcpSharp
                             mutated = HandleData(header, packet.Slice(0, length)) | mutated;
                         }
 
-                        if (_receiveWindowNotificationOptions is not null)
+                        KcpReceiveWindowNotificationOptions? receiveWindowNotificationOptionsOptional = _receiveWindowNotificationOptions;
+                        if (receiveWindowNotificationOptionsOptional is not null)
                         {
                             if (_ts_rcv_notify_wait != 0)
                             {
                                 _ts_rcv_notify_wait = 0;
-                                _ts_rcv_notify = current + (uint)_receiveWindowNotificationOptions.InitialInterval;
+                                _ts_rcv_notify = current + receiveWindowNotificationOptionsOptional.Value.InitialInterval;
                             }
                         }
                     }

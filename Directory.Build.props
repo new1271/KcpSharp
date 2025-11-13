@@ -3,14 +3,14 @@
   <Import Project="build\dependencies.props" />
 
   <PropertyGroup>
-    <Product>KcpSharp</Product>
-    <Authors>yigolden</Authors>
+    <Product>KcpSharp.unofficial.new1271</Product>
+    <Authors>yigolden;new1271</Authors>
     <Copyright>Copyright (c) 2021 yigolden</Copyright>
     <PackageTags>kcp;arq;udp;networking</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/yigolden/KcpSharp</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/new1271/KcpSharp</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/yigolden/KcpSharp.git</RepositoryUrl>
+    <RepositoryUrl>https://github.com/new1271/KcpSharp.git</RepositoryUrl>
 
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)build\key.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>

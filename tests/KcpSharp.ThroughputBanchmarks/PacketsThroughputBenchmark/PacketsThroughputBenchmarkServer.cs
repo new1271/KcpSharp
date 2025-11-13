@@ -32,9 +32,9 @@ namespace KcpSharp.ThroughputBanchmarks.PacketsThroughputBenchmark
             {
                 BufferPool = allocator,
                 Mtu = mtu,
-                SendWindow = windowSize,
-                RemoteReceiveWindow = windowSize,
-                UpdateInterval = updateInterval,
+                SendWindow = (uint)windowSize,
+                RemoteReceiveWindow = (uint)windowSize,
+                UpdateInterval = (uint)updateInterval,
                 NoDelay = noDelay
             };
 

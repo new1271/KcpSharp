@@ -3,7 +3,7 @@
     /// <summary>
     /// Options used to control the behaviors of <see cref="KcpConversation"/>.
     /// </summary>
-    public class KcpConversationOptions
+    public struct KcpConversationOptions
     {
         /// <summary>
         /// The buffer pool to rent buffer from.
@@ -13,27 +13,27 @@
         /// <summary>
         /// The maximum packet size that can be transmitted over the underlying transport.
         /// </summary>
-        public int Mtu { get; set; } = 1400;
+        public int Mtu { get; set; }
 
         /// <summary>
         /// The number of packets in the send window.
         /// </summary>
-        public int SendWindow { get; set; } = 32;
+        public uint SendWindow { get; set; }
 
         /// <summary>
         /// The number of packets in the receive window.
         /// </summary>
-        public int ReceiveWindow { get; set; } = 128;
+        public uint ReceiveWindow { get; set; }
 
         /// <summary>
         /// The nuber of packets in the receive window of the remote host.
         /// </summary>
-        public int RemoteReceiveWindow { get; set; } = 128;
+        public uint RemoteReceiveWindow { get; set; }
 
         /// <summary>
         /// The interval in milliseconds to update the internal state of <see cref="KcpConversation"/>.
         /// </summary>
-        public int UpdateInterval { get; set; } = 100;
+        public uint UpdateInterval { get; set; }
 
         /// <summary>
         /// Wether no-delay mode is enabled.
@@ -84,6 +84,30 @@
         /// Options for receive window size notification functionality.
         /// </summary>
         public KcpReceiveWindowNotificationOptions? ReceiveWindowNotificationOptions { get; set; }
+
+        /// <summary>
+        /// Default constructor for <see cref="KcpConversationOptions"/>.
+        /// </summary>
+        public KcpConversationOptions()
+        {
+            Mtu = MtuDefaultValue;
+            SendWindow = SendWindowDefaultValue;
+            ReceiveWindow = ReceiveWindowDefaultValue;
+            RemoteReceiveWindow = RemoteReceiveWindowDefaultValue;
+            UpdateInterval = UpdateIntervalDefaultValue;
+            SendQueueSize = SendQueueSizeDefaultValue;
+            ReceiveQueueSize = ReceiveQueueSizeDefaultValue;
+
+            BufferPool = null;
+            NoDelay = false;
+            FastResend = 0;
+            DisableCongestionControl = false;
+            StreamMode = false;
+            PreBufferSize = 0;
+            PostBufferSize = 0;
+            KeepAliveOptions = null;
+            ReceiveWindowNotificationOptions = null;
+        }
 
         internal const int MtuDefaultValue = 1400;
         internal const uint SendWindowDefaultValue = 32;

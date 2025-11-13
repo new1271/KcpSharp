@@ -36,12 +36,12 @@ namespace KcpSharp.Benchmarks
             {
                 BufferPool = _bufferPool,
                 Mtu = MTU,
-                UpdateInterval = UpdateInterval,
+                UpdateInterval = (uint)UpdateInterval,
                 StreamMode = true,
                 SendQueueSize = QueueSize,
-                ReceiveWindow = QueueSize,
-                SendWindow = WindowSize,
-                RemoteReceiveWindow = WindowSize,
+                ReceiveWindow = (uint)QueueSize,
+                SendWindow = (uint)WindowSize,
+                RemoteReceiveWindow = (uint)WindowSize,
                 DisableCongestionControl = true,
                 NoDelay = true
             });

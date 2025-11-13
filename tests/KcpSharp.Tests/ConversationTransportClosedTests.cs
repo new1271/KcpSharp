@@ -122,7 +122,8 @@ namespace KcpSharp.Tests
             {
                 var trackedAllocator = new TrackedBufferAllocator();
                 {
-                    using var conversation = new KcpConversation(blackholeConnection.Object, 42, new KcpConversationOptions { BufferPool = trackedAllocator, SendQueueSize = queueSize, SendWindow = sendWindowSize });
+                    using var conversation = new KcpConversation(blackholeConnection.Object, 42, new KcpConversationOptions {
+                        BufferPool = trackedAllocator, SendQueueSize = queueSize, SendWindow = (uint)sendWindowSize });
                     Task unregisterTask = Task.Run(async () => { await Task.Delay(500); conversation.SetTransportClosed(); });
                     Assert.False(await SendMultiplePacketsAsync(conversation, packetCount, cancellationToken));
                     await unregisterTask;

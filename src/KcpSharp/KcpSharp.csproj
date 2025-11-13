@@ -6,10 +6,17 @@
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <AnalysisLevel>latest</AnalysisLevel>
     <IsTrimmable>true</IsTrimmable>
-
+    <ApiCompatGenerateSuppressionFile>true</ApiCompatGenerateSuppressionFile>
+    
     <Description>C# asynchronous KCP protocol implementation. (ported from https://github.com/skywind3000/kcp)</Description>
 
-    <NoWarn>$(NoWarn);CA1031;CA1508;CA1815;CA2002;CA2213;CA2231;CA1510;CA1852</NoWarn>
+    <NoWarn>$(NoWarn);CA1031;CA1508;CA1815;CA2002;CA2213;CA2231;CA1510;CA1852;CS3003;CS3001</NoWarn>
+
+    <Authors>yigolden;new1271</Authors>
+
+    <PackageId>KcpSharp.unofficial.new1271</PackageId>
+
+    <Product>KcpSharp</Product>
     <!-- CA1031: Do not catch general exception types -->
     <!-- CA1508: Avoid dead conditional code -->
     <!-- CA1815: Override equals and operator equals on value types -->
