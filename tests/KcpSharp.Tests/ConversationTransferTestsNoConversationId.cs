@@ -135,9 +135,9 @@ namespace KcpSharp.Tests
                 byte[] buffer = new byte[2000];
                 Random.Shared.NextBytes(buffer);
 
-                Assert.True(await pipe.Alice.SendAsync(buffer.AsMemory(0, 1000), cancellationToken));
+                Assert.True(await pipe.Alice.SendAsync(buffer.AsSpan(0, 1000), cancellationToken));
                 Assert.True(await pipe.Alice.SendAsync(default, cancellationToken));
-                Assert.True(await pipe.Alice.SendAsync(buffer.AsMemory(1000, 1000), cancellationToken));
+                Assert.True(await pipe.Alice.SendAsync(buffer.AsSpan(1000, 1000), cancellationToken));
 
                 byte[] buffer2 = new byte[3000];
                 int bytesRead = 0;

@@ -172,7 +172,7 @@ namespace KcpTunnel
                     {
                         return;
                     }
-                    if (!await _conversation.SendAsync(buffer.AsMemory(0, bytesReceived), cancellationToken).ConfigureAwait(false))
+                    if (!await _conversation.SendAsync(buffer.AsSpan(0, bytesReceived), cancellationToken).ConfigureAwait(false))
                     {
                         return;
                     }

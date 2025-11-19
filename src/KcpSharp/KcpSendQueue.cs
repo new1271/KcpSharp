@@ -34,7 +34,7 @@ namespace KcpSharp
         private bool _signled;
         private bool _forStream;
         private byte _operationMode; // 0-send 1-flush 2-wait for space
-        private ReadOnlyMemory<byte> _buffer;
+        private KcpRentedBuffer _buffer;
         private int _waitForByteCount;
         private int _waitForSegmentCount;
         private CancellationToken _cancellationToken;
@@ -282,7 +282,7 @@ namespace KcpSharp
             }
         }
 
-        public ValueTask<bool> SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
+        public ValueTask<bool> SendAsync(ReadOnlySpan<byte> buffer, CancellationToken cancellationToken)
         {
             short token;
             lock (_queue)
@@ -311,7 +311,7 @@ namespace KcpSharp
                         expand = Math.Min(expand, buffer.Length);
                         if (expand > 0)
                         {
-                            data = data.AppendData(buffer.Span.Slice(0, expand));
+                            data = data.AppendData(buffer.Slice(0, expand));
                             buffer = buffer.Slice(expand);
                             Interlocked.Add(ref _unflushedBytes, expand);
                         }
@@ -338,7 +338,7 @@ namespace KcpSharp
 
                     int size = buffer.Length > mss ? mss : buffer.Length;
                     KcpRentedBuffer owner = _bufferPool.Rent(new KcpBufferPoolRentOptions(mss, false));
-                    KcpBuffer kcpBuffer = KcpBuffer.CreateFromSpan(owner, buffer.Span.Slice(0, size));
+                    KcpBuffer kcpBuffer = KcpBuffer.CreateFromSpan(owner, buffer.Slice(0, size));
                     buffer = buffer.Slice(size);
 
                     _queue.AddLast(_cache.Rent(kcpBuffer, _stream ? (byte)0 : (byte)fragment));
@@ -356,7 +356,16 @@ namespace KcpSharp
                 Debug.Assert(!_signled);
                 _forStream = false;
                 _operationMode = 0;
-                _buffer = buffer;
+                if (buffer.Length > 0)
+                {
+                    KcpRentedBuffer newBuffer = _bufferPool.Rent(new KcpBufferPoolRentOptions(buffer.Length, isOutbound: false));
+                    buffer.CopyTo(newBuffer.Span);
+                    _buffer = newBuffer;
+                }
+                else
+                {
+                    _buffer = KcpRentedBuffer.Empty;
+                }
                 _cancellationToken = cancellationToken;
                 token = _mrvtsc.Version;
             }
@@ -366,7 +375,7 @@ namespace KcpSharp
             return new ValueTask<bool>(this, token);
         }
 
-        public ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
+        public ValueTask WriteAsync(ReadOnlySpan<byte> buffer, CancellationToken cancellationToken)
         {
             short token;
             lock (_queue)
@@ -395,7 +404,7 @@ namespace KcpSharp
                         expand = Math.Min(expand, buffer.Length);
                         if (expand > 0)
                         {
-                            data = data.AppendData(buffer.Span.Slice(0, expand));
+                            data = data.AppendData(buffer.Slice(0, expand));
                             buffer = buffer.Slice(expand);
                             Interlocked.Add(ref _unflushedBytes, expand);
                         }
@@ -416,7 +425,7 @@ namespace KcpSharp
                 {
                     int size = buffer.Length > mss ? mss : buffer.Length;
                     KcpRentedBuffer owner = _bufferPool.Rent(new KcpBufferPoolRentOptions(mss, false));
-                    KcpBuffer kcpBuffer = KcpBuffer.CreateFromSpan(owner, buffer.Span.Slice(0, size));
+                    KcpBuffer kcpBuffer = KcpBuffer.CreateFromSpan(owner, buffer.Slice(0, size));
                     buffer = buffer.Slice(size);
 
                     _queue.AddLast(_cache.Rent(kcpBuffer, 0));
@@ -434,7 +443,16 @@ namespace KcpSharp
                 Debug.Assert(!_signled);
                 _forStream = true;
                 _operationMode = 0;
-                _buffer = buffer;
+                if (buffer.Length > 0)
+                {
+                    KcpRentedBuffer newBuffer = _bufferPool.Rent(new KcpBufferPoolRentOptions(buffer.Length, isOutbound: false));
+                    buffer.CopyTo(newBuffer.Span);
+                    _buffer = newBuffer;
+                }
+                else
+                {
+                    _buffer = KcpRentedBuffer.Empty;
+                }
                 _cancellationToken = cancellationToken;
                 token = _mrvtsc.Version;
             }
@@ -466,6 +484,7 @@ namespace KcpSharp
                 Debug.Assert(!_signled);
                 _forStream = false;
                 _operationMode = 1;
+                _buffer.Dispose();
                 _buffer = default;
                 _cancellationToken = cancellationToken;
                 token = _mrvtsc.Version;
@@ -498,6 +517,7 @@ namespace KcpSharp
                 Debug.Assert(!_signled);
                 _forStream = true;
                 _operationMode = 1;
+                _buffer.Dispose();
                 _buffer = default;
                 _cancellationToken = cancellationToken;
                 token = _mrvtsc.Version;
@@ -540,6 +560,7 @@ namespace KcpSharp
             _signled = true;
             _forStream = false;
             _operationMode = 0;
+            _buffer.Dispose();
             _buffer = default;
             _waitForByteCount = default;
             _waitForSegmentCount = default;
@@ -589,7 +610,7 @@ namespace KcpSharp
         {
             if (_activeWait && !_signled && _operationMode == 0)
             {
-                ReadOnlyMemory<byte> buffer = _buffer;
+                KcpRentedBuffer buffer = _buffer;
                 int mss = _mss;
                 int count = (buffer.Length <= mss) ? 1 : (buffer.Length + mss - 1) / mss;
 

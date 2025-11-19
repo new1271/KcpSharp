@@ -108,7 +108,7 @@ namespace KcpSharp
             {
                 return Task.FromException(new ObjectDisposedException(nameof(KcpStream)));
             }
-            return _conversation.WriteAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
+            return _conversation.WriteAsync(buffer.AsSpan(offset, count), cancellationToken).AsTask();
         }
 
         /// <inheritdoc />
@@ -146,7 +146,7 @@ namespace KcpSharp
             {
                 return new ValueTask(Task.FromException(new ObjectDisposedException(nameof(KcpStream))));
             }
-            return _conversation.WriteAsync(buffer, cancellationToken);
+            return _conversation.WriteAsync(buffer.Span, cancellationToken);
         }
 
         /// <inheritdoc />

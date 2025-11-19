@@ -158,7 +158,7 @@
         {
             length = Encoding.UTF8.GetBytes(message, buffer);
 
-            await conversation.SendAsync(buffer.AsMemory(0, length));
+            await conversation.SendAsync(buffer.AsSpan(0, length));
         }
         finally
         {

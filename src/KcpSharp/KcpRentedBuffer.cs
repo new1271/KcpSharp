@@ -11,6 +11,11 @@ namespace KcpSharp
     /// </summary>
     public readonly struct KcpRentedBuffer : IEquatable<KcpRentedBuffer>, IDisposable
     {
+        /// <summary>
+        /// Empty instance.
+        /// </summary>
+        public static readonly KcpRentedBuffer Empty = new KcpRentedBuffer(null, Memory<byte>.Empty);
+
         private readonly object? _owner;
         private readonly Memory<byte> _memory;
 
@@ -25,6 +30,11 @@ namespace KcpSharp
         /// The rented buffer.
         /// </summary>
         public Span<byte> Span => _memory.Span;
+
+        /// <summary>
+        /// The length for rented buffer.
+        /// </summary>
+        public int Length => _memory.Length;
 
         /// <summary>
         /// Whether this struct contains buffer rented from the pool.

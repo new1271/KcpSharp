@@ -60,7 +60,7 @@ namespace KcpSharp.Benchmarks
                 while (totalSentBytes < length)
                 {
                     int sendSize = Math.Min(buffer.Length, length - totalSentBytes);
-                    if (!await conversation.SendAsync(buffer.AsMemory(0, sendSize), cancellationToken).ConfigureAwait(false))
+                    if (!await conversation.SendAsync(buffer.AsSpan(0, sendSize), cancellationToken).ConfigureAwait(false))
                     {
                         return;
                     }

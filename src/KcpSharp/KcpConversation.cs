@@ -286,10 +286,10 @@ namespace KcpSharp
         /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> is fired before send operation is completed. Or <see cref="CancelPendingSend(Exception?, CancellationToken)"/> is called before this operation is completed.</exception>
         /// <exception cref="InvalidOperationException">The send or flush operation is initiated concurrently.</exception>
         /// <returns>A <see cref="ValueTask{Boolean}"/> that completes when the entire message is put into the queue. The result of the task is false when the transport is closed.</returns>
-        public ValueTask<bool> SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+        public ValueTask<bool> SendAsync(ReadOnlySpan<byte> buffer, CancellationToken cancellationToken = default)
             => _sendQueue.SendAsync(buffer, cancellationToken);
 
-        internal ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
+        internal ValueTask WriteAsync(ReadOnlySpan<byte> buffer, CancellationToken cancellationToken)
             => _sendQueue.WriteAsync(buffer, cancellationToken);
 
         /// <summary>
@@ -302,8 +302,8 @@ namespace KcpSharp
         /// <summary>
         /// Cancel the current send operation or flush operation.
         /// </summary>
-        /// <param name="innerException">The inner exception of the <see cref="OperationCanceledException"/> thrown by the <see cref="SendAsync(ReadOnlyMemory{byte}, CancellationToken)"/> method or <see cref="FlushAsync(CancellationToken)"/> method.</param>
-        /// <param name="cancellationToken">The <see cref="CancellationToken"/> in the <see cref="OperationCanceledException"/> thrown by the <see cref="SendAsync(ReadOnlyMemory{byte}, CancellationToken)"/> method or <see cref="FlushAsync(CancellationToken)"/> method.</param>
+        /// <param name="innerException">The inner exception of the <see cref="OperationCanceledException"/> thrown by the <see cref="SendAsync(ReadOnlySpan{byte}, CancellationToken)"/> method or <see cref="FlushAsync(CancellationToken)"/> method.</param>
+        /// <param name="cancellationToken">The <see cref="CancellationToken"/> in the <see cref="OperationCanceledException"/> thrown by the <see cref="SendAsync(ReadOnlySpan{byte}, CancellationToken)"/> method or <see cref="FlushAsync(CancellationToken)"/> method.</param>
         /// <returns>True if the current operation is canceled. False if there is no active send operation.</returns>
         public bool CancelPendingSend(Exception? innerException, CancellationToken cancellationToken)
             => _sendQueue.CancelPendingOperation(innerException, cancellationToken);
